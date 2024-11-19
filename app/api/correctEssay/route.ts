@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, language } = await request.json();
+    const { message, language, essayImages } = await request.json();
 
     const prompt = `
     Act as a ${language} writing teacher. Your task is to correct and improve my essay by addressing spelling errors,
@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
       throw new Error("Google Gemini client not found");
     }
 
-    const content = await model.generateContent([prompt, message]);
+    const content = await model.generateContent([
+      prompt,
+      message,
+      ...essayImages,
+    ]);
 
     const result: GenerateContentResponse = await content.response;
 

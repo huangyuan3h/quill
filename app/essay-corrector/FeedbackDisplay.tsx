@@ -1,3 +1,5 @@
+import { EssayFeedback } from "@/types/essay";
+
 type FeedbackDisplayProps = {
   feedback: EssayFeedback;
 };

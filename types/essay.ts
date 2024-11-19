@@ -8,7 +8,9 @@ type AdvancedSuggestion = {
   explanation: string;
 };
 
-type EssayFeedback = {
+export type EssayImage = { inlineData: { data: string; mimeType: string } };
+
+export type EssayFeedback = {
   corrections: Correction[];
   advanced_suggestions: AdvancedSuggestion[];
   score: number;

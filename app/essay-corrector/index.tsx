@@ -16,6 +16,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ImageUploader from "./ImageUploader";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { EssayImage } from "@/types/essay";
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64String = (reader.result as string).split(",")[1]; // 去除前缀 "data:<mimeType>;base64,"
+      resolve(base64String);
+    };
+
+    reader.onerror = () => {
+      reject("Failed to convert file to base64");
+    };
+
+    reader.readAsDataURL(file); // 将文件读取为 base64 格式
+  });
+}
+
+const fileToGenerativePart = async (
+  file: File
+): Promise<{ inlineData: { data: string; mimeType: string } }> => {
+  const mimeTypeMapping: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+  };
+
+  const fileExtension = file.name.split(".").pop()?.toLowerCase();
+  const mimeType =
+    fileExtension && mimeTypeMapping[fileExtension]
+      ? mimeTypeMapping[fileExtension]
+      : "application/octet-stream";
+  return {
+    inlineData: {
+      data: await fileToBase64(file),
+      mimeType,
+    },
+  };
+};
 
 export const EssayCorrector: React.FC = () => {
   const [message, setMessage] = React.useState("");
@@ -25,19 +65,24 @@ export const EssayCorrector: React.FC = () => {
   const [images, setImages] = React.useState<File[]>([]);
 
   const handleClick = () => {
-    if (message.trim().length < 20) {
+    if (message.trim().length < 20 && images.length === 0) {
       alert("作文内容需至少包含 20 个字");
       return;
     }
 
     startTransition(async () => {
+      let essayImages: EssayImage[] = [];
+      if (images.length > 0) {
+        essayImages = await Promise.all(images.map(fileToGenerativePart));
+      }
+
       try {
         const response = await fetch("/api/correctEssay", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message, language }),
+          body: JSON.stringify({ message, language, essayImages }),
         });
 
         if (!response.ok) throw new Error("Failed to correct the essay");
