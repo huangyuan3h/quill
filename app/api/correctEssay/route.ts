@@ -31,11 +31,10 @@ export async function POST(request: NextRequest) {
       throw new Error("Google Gemini client not found");
     }
 
-    const content = await model.generateContent([
-      prompt,
-      message,
-      ...essayImages,
-    ]);
+    const content =
+      essayImages && essayImages.length > 0
+        ? await model.generateContent([prompt, ...essayImages])
+        : await model.generateContent([prompt, message]);
 
     const result: GenerateContentResponse = await content.response;
 
