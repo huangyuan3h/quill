@@ -6,7 +6,7 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
-    "MyWeb": {
+    "quill": {
       "type": "sst.aws.Nextjs"
       "url": string
     }

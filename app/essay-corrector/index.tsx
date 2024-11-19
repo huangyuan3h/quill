@@ -11,12 +11,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { FeedbackDisplay } from "./FeedbackDisplay";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ImageUploader from "./ImageUploader";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 export const EssayCorrector: React.FC = () => {
   const [message, setMessage] = React.useState("");
   const [language, setLanguage] = React.useState("English");
   const [feedback, setFeedback] = React.useState(null);
   const [isPending, startTransition] = useTransition();
+  const [images, setImages] = React.useState<File[]>([]);
 
   const handleClick = () => {
     if (message.trim().length < 20) {
@@ -49,21 +55,40 @@ export const EssayCorrector: React.FC = () => {
     setLanguage(v);
   };
 
+  const handleImageChange = (path: File[]) => {
+    console.log(path);
+    setImages(path);
+  };
+
   return (
     <div className="container mt-8 mx-auto">
       <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
         作文批改
       </h1>
 
-      <div className="grid w-full gap-1.5 mt-8">
-        <Label htmlFor="message">书写你的作文：</Label>
-        <Textarea
-          placeholder="在这里写你的作文"
-          value={message}
-          className="min-h-40 mt-2"
-          onChange={(e) => setMessage(e.target.value)}
-        />
-      </div>
+      <Tabs defaultValue="text" className="mt-8">
+        <TabsList>
+          <TabsTrigger value="text">输入作文</TabsTrigger>
+          <TabsTrigger value="image">上传图片</TabsTrigger>
+        </TabsList>
+        <TabsContent value="text">
+          <div className="grid w-full gap-1.5 mt-8">
+            <Label htmlFor="message">书写你的作文：</Label>
+            <Textarea
+              placeholder="在这里写你的作文"
+              value={message}
+              className="min-h-40 mt-2"
+              onChange={(e) => setMessage(e.target.value)}
+            />
+          </div>
+        </TabsContent>
+        <TabsContent value="image">
+          <DndProvider backend={HTML5Backend}>
+            <ImageUploader imagePath={images} onChange={handleImageChange} />
+          </DndProvider>
+        </TabsContent>
+      </Tabs>
+
       <div className="mt-4">
         <Select value={language} onValueChange={handleLanguageChange}>
           <SelectTrigger className="w-[180px]">
@@ -82,14 +107,7 @@ export const EssayCorrector: React.FC = () => {
           {isPending ? "批改中..." : "批改作文"}
         </Button>
       </div>
-      {feedback && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold">批改结果</h2>
-          <pre className="bg-gray-100 p-4 rounded-md mt-4">
-            {JSON.stringify(feedback, null, 2)}
-          </pre>
-        </div>
-      )}
+      {feedback && <FeedbackDisplay feedback={feedback} />}
     </div>
   );
 };
